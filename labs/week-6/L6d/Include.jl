@@ -31,7 +31,7 @@ using DataFrames
 using StatsPlots
 using StatsBase
 using Distributions
-
+using PrettyTables
 
 # set the random seed for reproducibility
 Random.seed!(1234);
