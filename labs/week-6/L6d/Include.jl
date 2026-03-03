@@ -1,25 +1,37 @@
 # setup paths -
-const _ROOT = pwd();
-const _PATH_TO_SRC = joinpath(_ROOT, "src");
+const _ROOT = @__DIR__
 
-# check do we have a Manifest.toml file?
-using Pkg;
+# load external packages -
+using Pkg
 if (isfile(joinpath(_ROOT, "Manifest.toml")) == false) # have manifest file, we are good. Otherwise, we need to instantiate the environment
     Pkg.add(path="https://github.com/varnerlab/VLDataScienceMachineLearningPackage.jl.git")
     Pkg.activate("."); Pkg.resolve(); Pkg.instantiate(); Pkg.update();
 end
 
-# load external packages -
+# using statements -
 using VLDataScienceMachineLearningPackage
-using StatsPlots
+using Images
+using ImageInTerminal
+using FileIO
+using ImageIO
+using OneHotArrays
+using Statistics
+using JLD2
+using LinearAlgebra
 using Plots
 using Colors
-using Statistics
-using LinearAlgebra
 using Distances
-using PrettyTables
+using DataStructures
+using Test
 using Random
-using KernelFunctions
-using DataFrames
+using LinearAlgebra
 using Printf
+using NNlib
 using DataFrames
+using StatsPlots
+using StatsBase
+using Distributions
+using PrettyTables
+
+# set the random seed for reproducibility
+Random.seed!(1234);

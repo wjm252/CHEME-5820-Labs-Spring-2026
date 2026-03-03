@@ -21,5 +21,6 @@ using PrettyTables
 using Random
 using KernelFunctions
 using DataFrames
-using Printf
-using DataFrames
+
+# set the random seed for reproducibility
+Random.seed!(1234);
