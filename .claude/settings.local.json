@@ -7,7 +7,9 @@
       "Bash(grep -l \"parameters\\\\|weights\\\\|biases\\\\|params\\\\|nparams\" /tmp/CHEME-5820-Lectures-Spring-2026/lectures/week-8/L8c/*.ipynb 2>/dev/null | head -5)",
       "Bash(cat:*)",
       "Bash(ps:*)",
-      "Bash(kill:*)"
+      "Bash(kill:*)",
+      "WebFetch(domain:nxtai-conference.com)",
+      "WebSearch"
     ]
   }
 }
