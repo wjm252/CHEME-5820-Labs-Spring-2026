@@ -10,8 +10,11 @@ for a fed-batch CHO antibody production model.
 - `K_gln::Float64`: Monod constant for glutamine (mM).
 - `K_I_lac::Float64`: inhibition constant for lactate (mM).
 - `K_I_amm::Float64`: inhibition constant for ammonia (mM).
-- `k_d::Float64`: specific death rate (1/h).
-- `q_P::Float64`: specific antibody productivity (mg/gDW/h).
+- `k_d::Float64`: maximum specific death rate (1/h).
+- `KD_lac::Float64`: half-saturation constant for lactate in the death rate model (mM).
+- `KD_amm::Float64`: half-saturation constant for ammonia in the death rate model (mM).
+- `alpha_P::Float64`: growth-associated productivity coefficient (mg/gDW); Luedeking–Piret α.
+- `beta_P::Float64`: non-growth-associated productivity coefficient (mg/gDW/h); Luedeking–Piret β.
 - `Y_X_glc::Float64`: biomass yield on glucose (gDW/mmol).
 - `Y_X_gln::Float64`: biomass yield on glutamine (gDW/mmol).
 - `Y_P_glc::Float64`: product yield on glucose (mg/mmol).
@@ -34,9 +37,12 @@ mutable struct MyFedBatchCHOParameters
     K_I_lac::Float64
     K_I_amm::Float64
     k_d::Float64
+    KD_lac::Float64    # half-saturation for lactate in death rate (mM)
+    KD_amm::Float64    # half-saturation for ammonia in death rate (mM)
 
-    # product formation -
-    q_P::Float64
+    # product formation (Luedeking-Piret: q_P = alpha_P * mu + beta_P) -
+    alpha_P::Float64   # growth-associated coefficient (mg/gDW)
+    beta_P::Float64    # non-growth-associated coefficient (mg/gDW/h)
 
     # yield coefficients -
     Y_X_glc::Float64

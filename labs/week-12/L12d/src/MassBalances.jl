@@ -28,15 +28,16 @@ function rhs!(du, u, p::MyFedBatchCHOParameters, t)
 
     # kinetic rates -
     mu = growth_rate(S_glc, S_gln, Lac, Amm, p);
-    q_P = product_formation_rate(p);
-    q_glc = substrate_uptake_glucose(mu, q_P, p);
-    q_gln = substrate_uptake_glutamine(mu, q_P, p);
+    mu_d = death_rate(Lac, Amm, p);
+    q_P = product_formation_rate(mu, p);
+    q_glc = substrate_uptake_glucose(mu, p);
+    q_gln = substrate_uptake_glutamine(mu, p);
     q_lac = byproduct_formation_lactate(q_glc, p);
     q_amm = byproduct_formation_ammonia(q_gln, p);
 
     # mass balances -
     du[1] = F;                                      # dV/dt (L/h)
-    du[2] = (mu - p.k_d - D) * X;                   # dX/dt (gDW/L/h)
+    du[2] = (mu - mu_d - D) * X;                    # dX/dt (gDW/L/h)
     du[3] = D * (p.S_glc_f - S_glc) - q_glc * X;   # dS_glc/dt (mM/h)
     du[4] = D * (p.S_gln_f - S_gln) - q_gln * X;   # dS_gln/dt (mM/h)
     du[5] = q_P * X - D * P;                        # dP/dt (mg/L/h)

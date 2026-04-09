@@ -16,26 +16,30 @@ as conditioning inputs to the LSTM.
 - `MyFedBatchCHOParameters`: initialized parameter struct with `feed_on = 0.0`.
 """
 function build_default_parameters(; F_max::Float64, Glc_min::Float64, Glc_max::Float64,
-    mu_max::Float64 = 0.035,        # mid-range of 0.025-0.050 1/h
-    K_glc::Float64 = 1.5,           # mid-range of 1.0-2.25 mM
-    K_gln::Float64 = 0.12,          # mid-range of 0.047-0.23 mM
-    K_I_lac::Float64 = 47.0,        # mid-range of 43-52 mM
-    K_I_amm::Float64 = 8.0,         # mid-range of 6.5-9.5 mM
-    k_d::Float64 = 0.005,           # mid-range of 0.003-0.007 1/h
-    q_P::Float64 = 0.015,           # specific antibody productivity (mg/gDW/h)
-    Y_X_glc::Float64 = 0.070,       # biomass yield on glucose (gDW/mmol)
+    mu_max::Float64 = 0.029,        # Xing et al. (2010) Table 2: 0.029 1/h
+    K_glc::Float64 = 0.10,          # Xing et al. (2010) Table 3: ~0.084 mM (rounded up slightly)
+    K_gln::Float64 = 0.05,          # Xing et al. (2010) Table 3: ~0.047 mM
+    K_I_lac::Float64 = 43.0,        # Xing et al. (2010) Table 3: 43.0 mM
+    K_I_amm::Float64 = 6.5,         # Xing et al. (2010) Table 3: 6.51 mM
+    k_d::Float64 = 0.016,           # Xing et al. (2010) Table 2: 0.016 1/h (maximum death rate)
+    KD_lac::Float64 = 45.8,         # Xing et al. (2010) Table 3: 45.8 mM (lactate half-sat. for death)
+    KD_amm::Float64 = 6.5,          # Xing et al. (2010) Table 3: 6.51 mM (ammonia half-sat. for death)
+    alpha_P::Float64 = 100.0,       # growth-associated productivity (mg/gDW); at mu_max=0.029: 100*0.029=2.9 mg/gDW/h
+    beta_P::Float64 = 5.0,          # non-growth-associated productivity (mg/gDW/h); Luedeking-Piret beta
+    Y_X_glc::Float64 = 0.070,       # biomass yield on glucose (gDW/mmol); Xing et al. (2010) Table 2 basis
     Y_X_gln::Float64 = 0.210,       # biomass yield on glutamine (gDW/mmol)
-    Y_P_glc::Float64 = 0.05,        # product yield on glucose (mg/mmol)
-    Y_P_gln::Float64 = 0.10,        # product yield on glutamine (mg/mmol)
-    Y_lac_glc::Float64 = 1.2,       # lactate yield on glucose (mmol/mmol, mid-range 0.7-1.6)
-    Y_amm_gln::Float64 = 0.70,      # ammonia yield on glutamine (mmol/mmol, mid-range 0.67-0.74)
+    Y_P_glc::Float64 = 16.7,        # product yield on glucose (mg/mmol)
+    Y_P_gln::Float64 = 33.3,        # product yield on glutamine (mg/mmol)
+    Y_lac_glc::Float64 = 1.23,      # Xing et al. (2010) Table 2: 1.23 mmol/mmol
+    Y_amm_gln::Float64 = 0.67,      # Xing et al. (2010) Table 2: 0.67 mmol/mmol
     S_glc_f::Float64 = 500.0,       # feed glucose concentration (mM)
-    S_gln_f::Float64 = 50.0,        # feed glutamine concentration (mM)
+    S_gln_f::Float64 = 167.0,       # feed glutamine concentration (mM); matched to 3:1 glc:gln consumption stoichiometry
     )::MyFedBatchCHOParameters
 
     return MyFedBatchCHOParameters(
         mu_max, K_glc, K_gln, K_I_lac, K_I_amm, k_d,
-        q_P,
+        KD_lac, KD_amm,
+        alpha_P, beta_P,
         Y_X_glc, Y_X_gln, Y_P_glc, Y_P_gln, Y_lac_glc, Y_amm_gln,
         S_glc_f, S_gln_f,
         F_max, Glc_min, Glc_max,

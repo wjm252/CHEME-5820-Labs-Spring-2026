@@ -27,75 +27,63 @@ function simulate_fedbatch(p::MyFedBatchCHOParameters;
     prob = ODEProblem(rhs!, u0, tspan, p);
     cbs = build_feed_callbacks(p);
 
-    # solve with explicit Runge-Kutta method -
+    # solve with explicit Runge-Kutta method; reject steps that push any
+    # concentration (states 2–7) below -1e-6 as a numerical safety net -
     sol = solve(prob, Tsit5();
         callback = cbs,
         saveat = saveat,
         abstol = 1e-8,
         reltol = 1e-6,
-        maxiters = 1_000_000
+        maxiters = 1_000_000,
+        isoutofdomain = (u, p, t) -> any(u[i] < -1e-6 for i in 2:7)
     );
 
     return sol;
 end
 
 """
-    generate_cho_glutamine_dataset(gln_values::Vector{Float64};
-        u0_base::Vector{Float64} = [0.5, 0.5, 25.0, 4.0, 0.0, 0.0, 0.0],
+    generate_cho_dataset(conditions::Vector{Tuple{Float64,Float64,Float64}};
+        u0::Vector{Float64} = [0.5, 0.5, 25.0, 4.0, 0.0, 0.0, 0.0],
         tspan::Tuple{Float64,Float64} = (0.0, 240.0),
-        saveat::Float64 = 1.0,
-        F_max::Float64 = 0.02,
-        Glc_min::Float64 = 2.0,
-        Glc_max::Float64 = 15.0) -> Tuple
+        saveat::Float64 = 1.0) -> Tuple
 
-Generate a dataset of CHO bioreactor simulations at different initial glutamine concentrations,
-all with the same feed policy. Glutamine is a key nitrogen source for CHO cells; varying its
-initial concentration changes the growth phase duration and by-product accumulation profile.
+Generate a dataset of CHO bioreactor simulations at different feed policy conditions.
+Each condition is a tuple `(F_max, Glc_min, Glc_max)`.
 
 ### Arguments
-- `gln_values::Vector{Float64}`: vector of initial glutamine concentrations (mM).
-- `u0_base::Vector{Float64}`: base initial state vector (default: V=0.5L, X=0.5gDW/L, S_glc=25mM, S_gln=4mM, P=0, Lac=0, Amm=0).
+- `conditions::Vector{Tuple{Float64,Float64,Float64}}`: vector of (F_max, Glc_min, Glc_max) tuples.
+- `u0::Vector{Float64}`: initial state vector (default: V=0.5L, X=0.5gDW/L, S_glc=25mM, S_gln=4mM, P=0, Lac=0, Amm=0).
 - `tspan::Tuple{Float64,Float64}`: simulation time span in hours (default: 0 to 240).
 - `saveat::Float64`: time step for saving solution points in hours (default: 1.0).
-- `F_max::Float64`: fixed maximum feed rate (L/h, default: 0.02).
-- `Glc_min::Float64`: fixed glucose lower threshold (mM, default: 2.0).
-- `Glc_max::Float64`: fixed glucose upper threshold (mM, default: 15.0).
 
 ### Returns
-- `Tuple{Vector{Float64}, Vector{Matrix{Float64}}, Vector{Float64}}`:
-  tuple of (time_vector, state_arrays, gln_values) where each `state_arrays[i]` is a
+- `Tuple{Vector{Float64}, Vector{Matrix{Float64}}, Vector{Tuple{Float64,Float64,Float64}}}`:
+  tuple of (time_vector, state_arrays, conditions) where each `state_arrays[i]` is a
   `(T x 7)` matrix (rows = time points, columns = states).
 """
-function generate_cho_glutamine_dataset(gln_values::Vector{Float64};
-    u0_base::Vector{Float64} = [0.5, 0.5, 25.0, 4.0, 0.0, 0.0, 0.0],
+function generate_cho_dataset(conditions::Vector{Tuple{Float64,Float64,Float64}};
+    u0::Vector{Float64} = [0.5, 0.5, 25.0, 4.0, 0.0, 0.0, 0.0],
     tspan::Tuple{Float64,Float64} = (0.0, 240.0),
-    saveat::Float64 = 1.0,
-    F_max::Float64 = 0.02,
-    Glc_min::Float64 = 2.0,
-    Glc_max::Float64 = 15.0)
+    saveat::Float64 = 1.0)
 
     # initialize -
-    n_curves = length(gln_values);
-    state_arrays = Vector{Matrix{Float64}}(undef, n_curves);
+    n_conditions = length(conditions);
+    state_arrays = Vector{Matrix{Float64}}(undef, n_conditions);
 
-    # build a common time grid so all curves have the same number of time points.
+    # build a common time grid so all conditions have the same number of time points.
     # the ODE solver with callbacks can return extra points at event times,
     # so we interpolate each solution onto this fixed grid -
     time_vector = collect(range(tspan[1], tspan[2], step = saveat));
     n_timepoints = length(time_vector);
 
-    # simulate each glutamine level -
-    for (j, gln) in enumerate(gln_values)
+    # simulate each condition -
+    for (j, cond) in enumerate(conditions)
 
-        # build parameters with fixed feed policy -
-        p = build_default_parameters(; F_max = F_max, Glc_min = Glc_min, Glc_max = Glc_max);
-
-        # set initial glutamine concentration -
-        u0 = copy(u0_base);
-        u0[4] = gln;
+        # build parameters for this condition -
+        p = build_default_parameters(; F_max = cond[1], Glc_min = cond[2], Glc_max = cond[3]);
 
         # simulate -
-        sol = simulate_fedbatch(p; u0 = u0, tspan = tspan, saveat = saveat);
+        sol = simulate_fedbatch(p; u0 = copy(u0), tspan = tspan, saveat = saveat);
 
         # interpolate solution onto the common time grid -
         state_matrix = zeros(Float64, n_timepoints, 7);
@@ -105,7 +93,7 @@ function generate_cho_glutamine_dataset(gln_values::Vector{Float64};
         state_arrays[j] = state_matrix;
     end
 
-    return (time_vector, state_arrays, gln_values);
+    return (time_vector, state_arrays, conditions);
 end
 
 """
